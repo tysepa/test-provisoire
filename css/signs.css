@@ -1,0 +1,201 @@
+/* DriveRwanda Road Sign Catalog & Interactive Flashcard Styles */
+
+/* Sign Category Filter Nav */
+.sign-filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  scroll-behavior: smooth;
+}
+
+.sign-filter-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.sign-filter-bar::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
+}
+
+.filter-chip {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+}
+
+.filter-chip:hover {
+  color: var(--text-main);
+  border-color: var(--accent-emerald);
+}
+
+.filter-chip.active {
+  background: var(--accent-emerald);
+  color: #ffffff;
+  border-color: var(--accent-emerald);
+  box-shadow: var(--shadow-emerald);
+}
+
+/* Signs Grid */
+.signs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Interactive Sign Flashcard */
+.sign-card {
+  perspective: 1000px;
+  min-height: 320px;
+  cursor: pointer;
+}
+
+.sign-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.sign-card.flipped .sign-card-inner {
+  transform: rotateY(180deg);
+}
+
+.sign-card-front, .sign-card-back {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+}
+
+.sign-card-back {
+  transform: rotateY(180deg);
+  background: var(--bg-surface-elevated);
+  text-align: left;
+  align-items: flex-start;
+}
+
+/* Vector Sign Rendering Container */
+.sign-svg-container {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5rem 0;
+  transition: transform 0.3s ease;
+}
+
+.sign-card:hover .sign-svg-container {
+  transform: scale(1.08);
+}
+
+.sign-title-front {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 0.5rem;
+}
+
+.flip-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Interactive Priority Intersection Visualizer */
+.intersection-box {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 340px;
+  margin: 1.5rem auto;
+  background: #1e293b;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--border-subtle);
+  box-shadow: var(--shadow-lg);
+}
+
+.road-vertical {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  transform: translateX(-50%);
+  background: #334155;
+  border-left: 2px dashed rgba(255,255,255,0.4);
+  border-right: 2px dashed rgba(255,255,255,0.4);
+}
+
+.road-horizontal {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 120px;
+  transform: translateY(-50%);
+  background: #334155;
+  border-top: 2px dashed rgba(255,255,255,0.4);
+  border-bottom: 2px dashed rgba(255,255,255,0.4);
+}
+
+.intersection-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  background: #1e293b;
+}
+
+.car-node {
+  position: absolute;
+  width: 44px;
+  height: 70px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.car-node.car-a { background: #ef4444; bottom: 15px; left: calc(50% + 10px); } /* Coming from South */
+.car-node.car-b { background: #3b82f6; top: 15px; left: calc(50% - 54px); }  /* Coming from North */
+.car-node.car-c { background: #10b981; left: 15px; top: calc(50% + 10px); transform: rotate(90deg); } /* Coming from West */
+.car-node.car-d { background: #f59e0b; right: 15px; top: calc(50% - 54px); transform: rotate(90deg); } /* Coming from East */
+
+.car-node:hover {
+  transform: scale(1.15);
+  z-index: 10;
+}
