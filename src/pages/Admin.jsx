@@ -12,6 +12,13 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 export function Admin() {
+  // Admin Login Guard state
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    return sessionStorage.getItem("driverwanda_admin_auth") === "true";
+  });
+  const [usernameInput, setUsernameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+
   const [activeTab, setActiveTab] = useState("payments"); // "payments" | "students" | "upload_exam" | "comments"
   const [payments, setPayments] = useState([]);
   const [students, setStudents] = useState([]);
@@ -40,8 +47,29 @@ export function Admin() {
   };
 
   useEffect(() => {
-    refreshData();
-  }, []);
+    if (isAdminLoggedIn) {
+      refreshData();
+    }
+  }, [isAdminLoggedIn]);
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (usernameInput === "Epa" && passwordInput === "Epa123") {
+      setIsAdminLoggedIn(true);
+      sessionStorage.setItem("driverwanda_admin_auth", "true");
+      showToast("Mwariyingire neza nka Admin (Tuyisunge Epaphrodis)!", "success");
+      setUsernameInput("");
+      setPasswordInput("");
+    } else {
+      showToast("Username cyangwa Password y'Admin siko biri! Shaka koresha Username: Epa & Password: Epa123.", "error");
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminLoggedIn(false);
+    sessionStorage.removeItem("driverwanda_admin_auth");
+    showToast("Mwasohotse mu buyobozi (Admin Logged Out).", "info");
+  };
 
   const handleApprove = (id) => {
     try {
@@ -112,6 +140,54 @@ export function Admin() {
     }
   };
 
+  // Render Admin Login Form if not authenticated
+  if (!isAdminLoggedIn) {
+    return (
+      <div style={{ maxWidth: 480, margin: "3rem auto" }}>
+        <div className="card" style={{ padding: "2.5rem 2rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>🔐</div>
+            <span className="badge badge-emerald" style={{ marginBottom: "0.5rem" }}>ADMINISTRATOR PORTAL</span>
+            <h2 className="highlight" style={{ fontSize: "1.6rem" }}>Kwinjira nka Admin</h2>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+              Shyiramo Username neza hamwe n&apos;ijambo ry&apos;ibanga rya Admin.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminLogin}>
+            <div className="form-group">
+              <label className="form-label">Username y&apos;Admin</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. Epa"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Ijambo ry&apos;ibanga (Password)</label>
+              <input
+                type="password"
+                className="form-input"
+                placeholder="••••••••"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-lg" style={{ width: "100%", marginTop: "0.75rem" }}>
+              🔑 Kwinjira (Log In to Admin Portal)
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   const pendingPaymentsCount = payments.filter(p => p.status === "pending").length;
   const pendingCommentsCount = comments.filter(c => c.status === "pending").length;
 
@@ -124,13 +200,19 @@ export function Admin() {
             <span className="badge badge-emerald" style={{ marginBottom: "0.3rem" }}>MoMo Pay Admin Panel (0782148861)</span>
             <h1 className="highlight">Admin Management Dashboard</h1>
             <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-              Gucunga kwishyura, abanyeshuri, gukora ibizamini no gusubiza ibibazo by&apos;abakiriya.
+              Logged in as Admin: <strong>Tuyisunge Epaphrodis (Epa)</strong>
             </p>
           </div>
 
-          <div style={{ background: "rgba(0, 163, 224, 0.15)", border: "1px solid var(--rw-blue)", padding: "0.85rem 1.25rem", borderRadius: "var(--radius-md)" }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block" }}>Admin MoMo Pay:</span>
-            <strong style={{ fontSize: "1.2rem", color: "var(--rw-blue)" }}>📲 0782148861</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ background: "rgba(0, 163, 224, 0.15)", border: "1px solid var(--rw-blue)", padding: "0.85rem 1.25rem", borderRadius: "var(--radius-md)" }}>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block" }}>Admin MoMo Pay:</span>
+              <strong style={{ fontSize: "1.2rem", color: "var(--rw-blue)" }}>📲 0782148861</strong>
+            </div>
+
+            <button className="btn btn-secondary btn-sm" onClick={handleAdminLogout} title="Logout Admin">
+              🚪 Sohoka (Logout)
+            </button>
           </div>
         </div>
       </section>

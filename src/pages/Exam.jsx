@@ -123,7 +123,7 @@ export function Exam({ onFinishExam }) {
           </p>
 
           {/* Dual Options Grid: Free Trial vs Official 80 RWF Exam */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2.5rem", textAlign: "left" }}>
+          <div className="dual-options-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2.5rem", textAlign: "left" }}>
             
             {/* Option A: Free Trial Exam */}
             <div style={{ background: "var(--bg-dark)", border: "1.5px solid var(--accent-emerald)", padding: "1.75rem", borderRadius: "var(--radius-md)", display: "flex", flexDirection: "column", justifyBetween: "space-between" }}>
