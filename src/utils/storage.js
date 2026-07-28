@@ -1,3 +1,5 @@
+import { QUESTION_BANK } from "../data/questionBank";
+
 const KEYS = {
   CURRENT_USER: "driverwanda_current_user",
   USERS_DB: "driverwanda_registered_students",
@@ -55,7 +57,7 @@ export function initStorage() {
         studentEmail: "mugisha@drive.rw",
         commentText: "Muraho, ni ryari icyapa cya STOP gihinduka itegeko mu kizamini?",
         adminResponse: null,
-        status: "pending", // "pending" | "answered"
+        status: "pending",
         createdAt: new Date(Date.now() - 7200000).toISOString()
       }
     ]);
@@ -182,16 +184,27 @@ export function rejectPayment(paymentId) {
 export function validateAccessCode(inputCode) {
   const payments = getPayments();
   const codeClean = inputCode.trim().toUpperCase();
+
+  // Admin Master Code Bypass
+  if (codeClean === "ADMIN-EPA-MASTER" || codeClean === "EPA123") {
+    return { status: "approved", accessCode: codeClean, studentName: "Admin (Tuyisunge Epaphrodis)" };
+  }
+
   const match = payments.find(p => p.status === "approved" && p.accessCode && p.accessCode.toUpperCase() === codeClean);
   return match || null;
 }
 
-// Custom Exam Question Uploading
+// Question Management
 export function getCustomQuestions() {
   try {
     const data = localStorage.getItem(KEYS.CUSTOM_QUESTIONS);
     return data ? JSON.parse(data) : [];
   } catch (e) { return []; }
+}
+
+export function getAllExamQuestions() {
+  const custom = getCustomQuestions();
+  return [...QUESTION_BANK, ...custom];
 }
 
 export function addCustomQuestion(questionData) {
@@ -220,6 +233,13 @@ export function addCustomQuestion(questionData) {
   questions.push(newQ);
   localStorage.setItem(KEYS.CUSTOM_QUESTIONS, JSON.stringify(questions));
   return newQ;
+}
+
+export function deleteCustomQuestion(questionId) {
+  const questions = getCustomQuestions();
+  const filtered = questions.filter(q => q.id !== questionId);
+  localStorage.setItem(KEYS.CUSTOM_QUESTIONS, JSON.stringify(filtered));
+  return true;
 }
 
 // Client Comments & Q&A Storage

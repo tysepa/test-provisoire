@@ -6,6 +6,8 @@ import {
   getUsers, 
   getCustomQuestions, 
   addCustomQuestion, 
+  deleteCustomQuestion,
+  getAllExamQuestions,
   getComments, 
   respondToComment 
 } from "../utils/storage";
@@ -19,11 +21,14 @@ export function Admin() {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
 
-  const [activeTab, setActiveTab] = useState("payments"); // "payments" | "students" | "upload_exam" | "comments"
+  const [activeTab, setActiveTab] = useState("all_exams"); // "all_exams" | "payments" | "students" | "upload_exam" | "comments"
   const [payments, setPayments] = useState([]);
   const [students, setStudents] = useState([]);
   const [customQuestions, setCustomQuestions] = useState([]);
+  const [allQuestions, setAllQuestions] = useState([]);
   const [comments, setComments] = useState([]);
+  const [examCategoryFilter, setExamCategoryFilter] = useState("all");
+  const [searchQuestionQuery, setSearchQuestionQuery] = useState("");
   const { showToast } = useAuth();
 
   // Upload Question Form state
@@ -43,6 +48,7 @@ export function Admin() {
     setPayments(getPayments());
     setStudents(getUsers());
     setCustomQuestions(getCustomQuestions());
+    setAllQuestions(getAllExamQuestions());
     setComments(getComments());
   };
 
@@ -85,6 +91,16 @@ export function Admin() {
     try {
       rejectPayment(id);
       showToast("Payment request rejected.", "info");
+      refreshData();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  };
+
+  const handleDeleteQuestion = (id) => {
+    try {
+      deleteCustomQuestion(id);
+      showToast("Ikibazo cyasibwe mu kubika!", "info");
       refreshData();
     } catch (err) {
       showToast(err.message, "error");
@@ -139,6 +155,19 @@ export function Admin() {
       showToast(err.message, "error");
     }
   };
+
+  // Filtered Exam Questions List
+  let filteredQuestions = allQuestions;
+  if (examCategoryFilter !== "all") {
+    filteredQuestions = filteredQuestions.filter(q => q.category === examCategoryFilter);
+  }
+  if (searchQuestionQuery) {
+    const q = searchQuestionQuery.toLowerCase();
+    filteredQuestions = filteredQuestions.filter(item => 
+      item.question.rw.toLowerCase().includes(q) ||
+      (item.explanation && item.explanation.rw && item.explanation.rw.toLowerCase().includes(q))
+    );
+  }
 
   // Render Admin Login Form if not authenticated
   if (!isAdminLoggedIn) {
@@ -200,14 +229,14 @@ export function Admin() {
             <span className="badge badge-emerald" style={{ marginBottom: "0.3rem" }}>MoMo Pay Admin Panel (0782148861)</span>
             <h1 className="highlight">Admin Management Dashboard</h1>
             <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-              Logged in as Admin: <strong>Tuyisunge Epaphrodis (Epa)</strong>
+              Logged in as Admin: <strong>Tuyisunge Epaphrodis (Epa)</strong> • Full Exam Access Granted
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ background: "rgba(0, 163, 224, 0.15)", border: "1px solid var(--rw-blue)", padding: "0.85rem 1.25rem", borderRadius: "var(--radius-md)" }}>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block" }}>Admin MoMo Pay:</span>
-              <strong style={{ fontSize: "1.2rem", color: "var(--rw-blue)" }}>📲 0782148861</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ background: "rgba(0, 163, 224, 0.15)", border: "1px solid var(--rw-blue)", padding: "0.65rem 1rem", borderRadius: "var(--radius-md)" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>Admin Master Code:</span>
+              <strong style={{ fontSize: "1rem", color: "var(--rw-blue)", letterSpacing: "0.05em" }}>ADMIN-EPA-MASTER</strong>
             </div>
 
             <button className="btn btn-secondary btn-sm" onClick={handleAdminLogout} title="Logout Admin">
@@ -218,22 +247,117 @@ export function Admin() {
       </section>
 
       {/* Admin Navigation Tabs */}
-      <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: "0.75rem", marginBottom: "2rem", borderBottom: "1px solid var(--border-subtle)" }}>
+      <div style={{ display: "flex", gap: "0.65rem", overflowX: "auto", paddingBottom: "0.75rem", marginBottom: "2rem", borderBottom: "1px solid var(--border-subtle)" }}>
+        <button className={`btn ${activeTab === 'all_exams' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('all_exams')}>
+          📚 All Exam Questions ({allQuestions.length})
+        </button>
         <button className={`btn ${activeTab === 'payments' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('payments')}>
-          💳 Payments Verification ({pendingPaymentsCount})
+          💳 Payments ({pendingPaymentsCount})
         </button>
         <button className={`btn ${activeTab === 'students' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('students')}>
-          👥 Student Registrations ({students.length})
+          👥 Students ({students.length})
         </button>
         <button className={`btn ${activeTab === 'upload_exam' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('upload_exam')}>
-          📤 Upload New Exam Question ({customQuestions.length})
+          📤 Upload New Question
         </button>
         <button className={`btn ${activeTab === 'comments' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('comments')}>
-          💬 Client Comments &amp; Q&amp;A ({pendingCommentsCount})
+          💬 Client Q&amp;A ({pendingCommentsCount})
         </button>
       </div>
 
-      {/* TAB 1: MOMO PAYMENTS VERIFICATION */}
+      {/* TAB 1: ALL EXAM QUESTIONS ACCESS & INSPECTOR */}
+      {activeTab === "all_exams" && (
+        <div>
+          <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <h2>📚 Full Exam Question Bank ({filteredQuestions.length} Questions)</h2>
+                <p style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
+                  Admin access permission to view, inspect, search, and manage all driving theory questions.
+                </p>
+              </div>
+
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Shakisha ikibazo (Search exam)..."
+                value={searchQuestionQuery}
+                onChange={(e) => setSearchQuestionQuery(e.target.value)}
+                style={{ maxWidth: 280 }}
+              />
+            </div>
+
+            {/* Category Filter Pills */}
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
+              {["all", "rules", "signs", "priority", "penalties"].map(cat => (
+                <button
+                  key={cat}
+                  className={`btn btn-sm ${examCategoryFilter === cat ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setExamCategoryFilter(cat)}
+                >
+                  {cat.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            {filteredQuestions.map((q, idx) => (
+              <div key={q.id + idx} className="card" style={{ borderLeft: "5px solid var(--rw-blue)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div>
+                    <span className="badge badge-blue" style={{ marginRight: "0.5rem" }}>{q.category.toUpperCase()}</span>
+                    <span className="badge badge-emerald">Question #{idx + 1}</span>
+                  </div>
+                  
+                  {q.id.startsWith("q_custom_") && (
+                    <button className="btn btn-secondary btn-sm" style={{ color: "var(--accent-rose)" }} onClick={() => handleDeleteQuestion(q.id)}>
+                      🗑️ Siba (Delete)
+                    </button>
+                  )}
+                </div>
+
+                <h3 style={{ fontSize: "1.15rem", marginBottom: "1rem", lineHeight: 1.4 }}>
+                  {q.question.rw}
+                </h3>
+
+                {/* Option Choices */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.65rem", marginBottom: "1rem" }}>
+                  {(q.options.rw || q.options.en).map((opt, optIdx) => {
+                    const isCorrect = optIdx === q.correctIndex;
+                    const letter = String.fromCharCode(65 + optIdx);
+                    return (
+                      <div 
+                        key={optIdx} 
+                        style={{ 
+                          padding: "0.65rem 0.85rem", 
+                          borderRadius: "var(--radius-sm)", 
+                          background: isCorrect ? "rgba(16, 185, 129, 0.15)" : "var(--bg-dark)", 
+                          border: `1.5px solid ${isCorrect ? 'var(--accent-emerald)' : 'var(--border-subtle)'}`,
+                          fontSize: "0.9rem",
+                          fontWeight: isCorrect ? 700 : 400
+                        }}
+                      >
+                        {letter}. {opt} {isCorrect && "✓ (CORRECT ANSWER)"}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* RNP Traffic Code Explanation */}
+                {q.explanation && q.explanation.rw && (
+                  <div style={{ background: "rgba(0, 163, 224, 0.12)", border: "1px solid var(--rw-blue)", padding: "0.85rem", borderRadius: "var(--radius-sm)", fontSize: "0.88rem" }}>
+                    <strong style={{ color: "var(--rw-blue)", display: "block", marginBottom: "0.2rem" }}>📖 Isobanuro rya Polisi y&apos;u Rwanda (Traffic Code Explanation):</strong>
+                    {q.explanation.rw}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: MOMO PAYMENTS VERIFICATION */}
       {activeTab === "payments" && (
         <div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
@@ -321,7 +445,7 @@ export function Admin() {
         </div>
       )}
 
-      {/* TAB 2: STUDENT REGISTRATIONS & SUBSCRIPTIONS */}
+      {/* TAB 3: STUDENT REGISTRATIONS & SUBSCRIPTIONS */}
       {activeTab === "students" && (
         <div className="card" style={{ padding: "2rem" }}>
           <h2 style={{ marginBottom: "1.5rem" }}>Urutonde rw&apos;Abanyeshuri Biyandikishije ({students.length})</h2>
@@ -353,7 +477,7 @@ export function Admin() {
         </div>
       )}
 
-      {/* TAB 3: UPLOAD EXAM QUESTION */}
+      {/* TAB 4: UPLOAD EXAM QUESTION */}
       {activeTab === "upload_exam" && (
         <div>
           <div className="card" style={{ padding: "2rem", marginBottom: "2rem" }}>
@@ -417,26 +541,10 @@ export function Admin() {
               </button>
             </form>
           </div>
-
-          {/* Uploaded Questions Catalog */}
-          <div className="card" style={{ padding: "2rem" }}>
-            <h3>Ibibazo Byaherukaga Gushyirwamo ({customQuestions.length})</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
-              {customQuestions.map(q => (
-                <div key={q.id} style={{ background: "var(--bg-dark)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
-                  <span className="badge badge-emerald" style={{ marginBottom: "0.3rem" }}>{q.category.toUpperCase()}</span>
-                  <h4 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>{q.question.rw}</h4>
-                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                    ✓ Correct Option Index: {q.correctIndex} | Uploaded: {new Date(q.uploadedAt).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 
-      {/* TAB 4: CLIENT COMMENTS & Q&A RESPONSE SYSTEM */}
+      {/* TAB 5: CLIENT COMMENTS & Q&A RESPONSE SYSTEM */}
       {activeTab === "comments" && (
         <div>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>

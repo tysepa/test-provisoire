@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { QUESTION_BANK } from "../data/questionBank";
-import { saveExamResult, validateAccessCode, getPayments } from "../utils/storage";
+import { saveExamResult, validateAccessCode, getPayments, getAllExamQuestions } from "../utils/storage";
 import { TimerWidget } from "../components/TimerWidget";
 import { PaymentModal } from "../components/PaymentModal";
 import { useLanguage } from "../context/LanguageContext";
@@ -18,6 +18,9 @@ export function Exam({ onFinishExam }) {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { currentUser, showToast } = useAuth();
   const { lang, t } = useLanguage();
+
+  // Admin Account Check for Free Unlimited Access
+  const isAdminSession = sessionStorage.getItem("driverwanda_admin_auth") === "true" || currentUser?.email === "epamarayika@gmail.com";
 
   const userPayments = currentUser ? getPayments().filter(p => p.studentId === currentUser.id) : [];
   const approvedPayments = userPayments.filter(p => p.status === "approved");
@@ -41,7 +44,8 @@ export function Exam({ onFinishExam }) {
 
   // Start Free Trial Exam (5 Questions, no code needed)
   const startTrialExam = () => {
-    const trialPool = [...QUESTION_BANK].slice(0, 5);
+    const allPool = getAllExamQuestions();
+    const trialPool = [...allPool].slice(0, 5);
     setExamMode("trial");
     setQuestions(trialPool);
     setCurrentIndex(0);
@@ -49,6 +53,13 @@ export function Exam({ onFinishExam }) {
     setSecondsRemaining(5 * 60); // 5 minutes
     setIsStarted(true);
     showToast("Free Trial Exam (5 Questions) Gitangiye!", "info");
+  };
+
+  // Start Free Admin Official Exam (Bypasses payment & access code)
+  const startAdminFreeExam = () => {
+    showToast("👑 Admin Account: Direct Free Access to Official 20-Question Exam!", "success");
+    setExamMode("official");
+    startOfficialExam();
   };
 
   // Start Paid Official Exam (20 Questions, requires approved code)
@@ -71,7 +82,7 @@ export function Exam({ onFinishExam }) {
   };
 
   const startOfficialExam = () => {
-    let pool = [...QUESTION_BANK];
+    let pool = getAllExamQuestions();
     let selected = [];
     while (selected.length < 20) {
       selected = selected.concat(pool);
@@ -105,7 +116,7 @@ export function Exam({ onFinishExam }) {
       category: examMode === "trial" ? "Free Trial Test (5-Q)" : "Official Simulation (20-Q)"
     };
 
-    if (examMode === "official") {
+    if (examMode === "official" && !isAdminSession) {
       saveExamResult(resultData);
     }
     setIsStarted(false);
@@ -121,6 +132,22 @@ export function Exam({ onFinishExam }) {
           <p style={{ fontSize: "1.05rem", color: "var(--text-muted)", marginBottom: "2rem" }}>
             Hitamo gukora <strong>Free Trial Exam (Burembure)</strong> cyangwa ikizamini nyakuri (20 Questions, 80 RWF via MoMo Pay: <strong style={{ color: "var(--accent-emerald)" }}>0782148861</strong>).
           </p>
+
+          {/* Admin Account Free Unlimited Access Banner */}
+          {isAdminSession && (
+            <div style={{ background: "linear-gradient(135deg, rgba(0, 163, 224, 0.25), rgba(16, 185, 129, 0.25))", border: "1.5px solid var(--accent-emerald)", padding: "1.25rem 1.5rem", borderRadius: "var(--radius-md)", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", textAlign: "left" }}>
+              <div>
+                <span className="badge badge-emerald" style={{ marginBottom: "0.3rem" }}>ADMIN FREE ACCOUNT ACTIVE</span>
+                <h3 style={{ color: "var(--accent-emerald)", fontSize: "1.25rem" }}>👑 Tuyisunge Epaphrodis (Admin Access)</h3>
+                <p style={{ fontSize: "0.88rem", color: "var(--text-muted)" }}>
+                  Ufite uburenganzira bwo gukora ikizamini nyakuri cy&apos;ibibazo 20 ku busa nta kishyuwe n&apos;access code bisabwa.
+                </p>
+              </div>
+              <button className="btn btn-primary btn-lg" onClick={startAdminFreeExam}>
+                🚀 Start Official Exam (Admin Free Access)
+              </button>
+            </div>
+          )}
 
           {/* Dual Options Grid: Free Trial vs Official 80 RWF Exam */}
           <div className="dual-options-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2.5rem", textAlign: "left" }}>
@@ -215,7 +242,7 @@ export function Exam({ onFinishExam }) {
       <div className="card" style={{ marginBottom: "1.5rem", padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <span className={`badge ${examMode === 'trial' ? 'badge-emerald' : 'badge-blue'}`} style={{ marginBottom: "0.3rem" }}>
-            {examMode === 'trial' ? '🆓 FREE TRIAL TEST (5-Q)' : '💳 OFFICIAL PAID EXAM (20-Q)'}
+            {examMode === 'trial' ? '🆓 FREE TRIAL TEST (5-Q)' : '💳 OFFICIAL EXAM (20-Q)'}
           </span>
           <h3 style={{ fontSize: "1.1rem" }}>Ikibazo cya {currentIndex + 1} / {questions.length}</h3>
         </div>
