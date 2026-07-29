@@ -11,7 +11,7 @@ export function Footer({ setActiveTab }) {
           <div>
             <h3 className="brand-title" style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>Drive<span className="highlight">Rwanda</span></h3>
             <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", marginBottom: "1rem" }}>
-              Platform numero 1 mu Rwanda yo kwigiraho amategeko y&apos;omu handa n&apos;ibyapa no gutsindira ikizamini cy&apos;icyarabu (Provisoire).
+              Platform numero 1 mu Rwanda yo kwigiraho amategeko yo&apos;mu muhanda n&apos;ibyapa no gutsindira ikizamini cy&apos;agateganyo (Provisoire).
             </p>
             <span className="badge badge-emerald">MoMo Pay: 0782148861</span>
           </div>
